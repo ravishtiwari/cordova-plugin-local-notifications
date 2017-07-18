@@ -696,44 +696,50 @@
 - (void) fireEvent:(NSString*)event notification:(UILocalNotification*)notification
 {
     if (IsAtLeastiOSVersion(@"10.0")) {
-        UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
-        content.title = [NSString localizedUserNotificationStringForKey:notification.alertTitle arguments:nil];
-        content.body = [NSString localizedUserNotificationStringForKey:notification.alertBody
-                                                         arguments:nil];
-        content.sound = [UNNotificationSound defaultSound];
+        @try {
+            UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
+            content.title = [NSString localizedUserNotificationStringForKey:notification.alertTitle arguments:nil];
+            content.body = [NSString localizedUserNotificationStringForKey:notification.alertBody
+                                                             arguments:nil];
+            content.sound = [UNNotificationSound defaultSound];
 
-        
-        NSDate *fireDate = notification.fireDate;
-        if(fireDate==nil) {
-            fireDate = [NSDate date];
-        }
-         NSCalendar *gregorianCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
-        // Extract all date components into dateComponents
-         NSDateComponents *dateComponents = [gregorianCalendar components:NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit
-         | NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit
-                                                           fromDate:fireDate];
-         [dateComponents setTimeZone:[NSTimeZone defaultTimeZone]];
-        
-        /// 4. update application icon badge number
-        //content.badge = @([[UIApplication sharedApplication] applicationIconBadgeNumber] + 1);
-        
-        // Deliver the notification at the fire date.
-        UNCalendarNotificationTrigger *trigger = [UNCalendarNotificationTrigger triggerWithDateMatchingComponents:dateComponents repeats:NO];
-        
-        NSString *identifier = @"DefaultNotificationIdentifier";
-        if(notification.userInfo!=nil && [notification.userInfo objectForKey:@"id"]!=nil) {
-            identifier = [notification.userInfo objectForKey:@"id"];
-        }
-        
-        UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:identifier content:content trigger:trigger];
-        
-        /// 3. schedule localNotification
-        UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
-        [center addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {
-            if (!error) {
-                NSLog(@"add NotificationRequest succeeded!");
+            
+            NSDate *fireDate = notification.fireDate;
+            if(fireDate==nil) {
+                fireDate = [NSDate date];
             }
-        }];
+             NSCalendar *gregorianCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
+            // Extract all date components into dateComponents
+             NSDateComponents *dateComponents = [gregorianCalendar components:NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit
+             | NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit
+                                                               fromDate:fireDate];
+             [dateComponents setTimeZone:[NSTimeZone defaultTimeZone]];
+            
+            /// 4. update application icon badge number
+            //content.badge = @([[UIApplication sharedApplication] applicationIconBadgeNumber] + 1);
+            
+            // Deliver the notification at the fire date.
+            UNCalendarNotificationTrigger *trigger = [UNCalendarNotificationTrigger triggerWithDateMatchingComponents:dateComponents repeats:NO];
+            
+            NSString *identifier = @"DefaultNotificationIdentifier";
+            if(notification.userInfo!=nil && [notification.userInfo objectForKey:@"id"]!=nil) {
+                identifier = [notification.userInfo objectForKey:@"id"];
+            }
+            
+            UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:identifier content:content trigger:trigger];
+        
+        
+            /// 3. schedule localNotification
+            UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+            [center addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {
+                if (!error) {
+                    NSLog(@"add NotificationRequest succeeded!");
+                }
+            }];
+        } @catch (NSException *exception) {
+            NSLog(@"add NotificationRequest succeeded, with errors!");
+            NSLog(@"%@", exception.reason );
+        }
     } 
 
     NSString* js;
