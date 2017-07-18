@@ -61,12 +61,7 @@ NSInteger const APPLocalNotificationTypeTriggered = 2;
     self.fireDate = options.fireDate;
     self.timeZone = [NSTimeZone defaultTimeZone];
     self.applicationIconBadgeNumber = options.badgeNumber;
-    //TODO check this fix from: https://github.com/EddyVerbruggen/cordova-plugin-local-notifications.git
-    /**
-    if (NSCalendarUnitEra != options.repeatInterval) {
-        self.repeatInterval = options.repeatInterval;
-    }
-    */
+    self.category = options.category;
     self.repeatInterval = options.repeatInterval;
     self.alertBody = options.alertBody;
     self.soundName = options.soundName;

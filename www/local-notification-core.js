@@ -65,28 +65,28 @@ exports.setDefaults = function (newDefaults) {
  *      skipPermission:true schedules the notifications immediatly without
  *                          registering or checking for permission
  */
-exports.schedule = function (msgs, callback, scope, args) {
-    var fn = function(granted) {
+exports.schedule = function (opts, callback, scope) {
+    var notifications = Array.isArray(opts) ? opts : [opts];
+    var allInteractions = [];
 
-        if (!granted) return;
+    for (var i = 0; i < notifications.length; i++) {
+        var properties = notifications[i];
 
-        var notifications = Array.isArray(msgs) ? msgs : [msgs];
+        allInteractions.push(JSON.stringify(this.prepareActions(properties)));
+        this.mergeWithDefaults(properties);
+        this.convertProperties(properties);
+    }
 
+    this.registerPermission(allInteractions, function(granted) {
+        if (granted) {
+            this.exec('schedule', notifications, callback, scope);
         for (var i = 0; i < notifications.length; i++) {
             var notification = notifications[i];
 
             this.mergeWithDefaults(notification);
             this.convertProperties(notification);
         }
-
-        this.exec('schedule', notifications, callback, scope);
-    };
-
-    if (args && args.skipPermission) {
-        fn.call(this, true);
-    } else {
-        this.registerPermission(fn, this);
-    }
+    }, this);
 };
 
 /**
@@ -107,21 +107,7 @@ exports.update = function (msgs, callback, scope, args) {
 
         if (!granted) return;
 
-        var notifications = Array.isArray(msgs) ? msgs : [msgs];
-
-        for (var i = 0; i < notifications.length; i++) {
-            var notification = notifications[i];
-
-            this.convertProperties(notification);
-        }
-
-        this.exec('update', notifications, callback, scope);
-    };
-
-    if (args && args.skipPermission) {
-        fn.call(this, true);
-    } else {
-        this.registerPermission(fn, this);
+        this.convertProperties(properties);
     }
 };
 
@@ -430,19 +416,14 @@ exports.hasPermission = function (callback, scope) {
 /**
  * Register permission to show notifications if not already granted.
  *
+ * @param {Object} interactions
+ *      Category and all actions for iOS
  * @param {Function} callback
  *      The function to be exec as the callback
  * @param {Object?} scope
  *      The callback function's scope
  */
-exports.registerPermission = function (callback, scope) {
-
-    if (this._registered) {
-        return this.hasPermission(callback, scope);
-    } else {
-        this._registered = true;
-    }
-
+exports.registerPermission = function (interactions, callback, scope) {
     var fn = this.createCallbackFn(callback, scope);
 
     if (device.platform != 'iOS') {
@@ -450,7 +431,7 @@ exports.registerPermission = function (callback, scope) {
         return;
     }
 
-    exec(fn, null, 'LocalNotification', 'registerPermission', []);
+    exec(fn, null, 'LocalNotification', 'registerPermission', interactions);
 };
 
 
